@@ -1,3 +1,5 @@
+import 'package:verba/core/data/verba_data.dart';
+import 'package:verba/core/data/verba_storage.dart';
 import 'package:verba/core/models/language.dart';
 
 abstract class LanguageRepository {
@@ -11,17 +13,23 @@ abstract class LanguageRepository {
 }
 
 class InMemoryLanguageRepository implements LanguageRepository {
-  final List<Language> _languages = [];
+  final VerbaStorage _storage = VerbaStorage();
+
+  Future<VerbaData> _loadData() => _storage.load();
+
+  Future<void> _saveData(VerbaData data) => _storage.save(data);
 
   @override
   Future<List<Language>> getAll() async {
-    return List<Language>.unmodifiable(_languages);
+    final data = await _loadData();
+    return List<Language>.unmodifiable(data.languages);
   }
 
   @override
   Future<Language?> getById(String id) async {
+    final data = await _loadData();
     try {
-      return _languages.firstWhere((l) => l.id == id);
+      return data.languages.firstWhere((l) => l.id == id);
     } on StateError {
       return null;
     }
@@ -29,17 +37,23 @@ class InMemoryLanguageRepository implements LanguageRepository {
 
   @override
   Future<void> upsert(Language language) async {
-    final index = _languages.indexWhere((l) => l.id == language.id);
+    final data = await _loadData();
+    final languages = List<Language>.from(data.languages);
+    final index = languages.indexWhere((l) => l.id == language.id);
     if (index == -1) {
-      _languages.add(language);
+      languages.add(language);
     } else {
-      _languages[index] = language;
+      languages[index] = language;
     }
+    await _saveData(data.copyWith(languages: languages));
   }
 
   @override
   Future<void> delete(String id) async {
-    _languages.removeWhere((l) => l.id == id);
+    final data = await _loadData();
+    final languages = List<Language>.from(data.languages)
+      ..removeWhere((l) => l.id == id);
+    await _saveData(data.copyWith(languages: languages));
   }
 }
 

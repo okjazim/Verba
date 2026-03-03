@@ -1,3 +1,5 @@
+import 'package:verba/core/data/verba_data.dart';
+import 'package:verba/core/data/verba_storage.dart';
 import 'package:verba/core/models/lesson_item.dart';
 
 abstract class LessonItemRepository {
@@ -11,19 +13,25 @@ abstract class LessonItemRepository {
 }
 
 class InMemoryLessonItemRepository implements LessonItemRepository {
-  final List<LessonItem> _items = [];
+  final VerbaStorage _storage = VerbaStorage();
+
+  Future<VerbaData> _loadData() => _storage.load();
+
+  Future<void> _saveData(VerbaData data) => _storage.save(data);
 
   @override
   Future<List<LessonItem>> getByLessonId(String lessonId) async {
-    return _items
+    final data = await _loadData();
+    return data.items
         .where((i) => i.lessonId == lessonId)
         .toList(growable: false);
   }
 
   @override
   Future<LessonItem?> getById(String id) async {
+    final data = await _loadData();
     try {
-      return _items.firstWhere((i) => i.id == id);
+      return data.items.firstWhere((i) => i.id == id);
     } on StateError {
       return null;
     }
@@ -31,17 +39,23 @@ class InMemoryLessonItemRepository implements LessonItemRepository {
 
   @override
   Future<void> upsert(LessonItem item) async {
-    final index = _items.indexWhere((i) => i.id == item.id);
+    final data = await _loadData();
+    final items = List<LessonItem>.from(data.items);
+    final index = items.indexWhere((i) => i.id == item.id);
     if (index == -1) {
-      _items.add(item);
+      items.add(item);
     } else {
-      _items[index] = item;
+      items[index] = item;
     }
+    await _saveData(data.copyWith(items: items));
   }
 
   @override
   Future<void> delete(String id) async {
-    _items.removeWhere((i) => i.id == id);
+    final data = await _loadData();
+    final items = List<LessonItem>.from(data.items)
+      ..removeWhere((i) => i.id == id);
+    await _saveData(data.copyWith(items: items));
   }
 }
 

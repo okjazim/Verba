@@ -1,3 +1,5 @@
+import 'package:verba/core/data/verba_data.dart';
+import 'package:verba/core/data/verba_storage.dart';
 import 'package:verba/core/models/lesson.dart';
 
 abstract class LessonRepository {
@@ -13,24 +15,31 @@ abstract class LessonRepository {
 }
 
 class InMemoryLessonRepository implements LessonRepository {
-  final List<Lesson> _lessons = [];
+  final VerbaStorage _storage = VerbaStorage();
+
+  Future<VerbaData> _loadData() => _storage.load();
+
+  Future<void> _saveData(VerbaData data) => _storage.save(data);
 
   @override
   Future<List<Lesson>> getAll() async {
-    return List<Lesson>.unmodifiable(_lessons);
+    final data = await _loadData();
+    return List<Lesson>.unmodifiable(data.lessons);
   }
 
   @override
   Future<List<Lesson>> getByLanguageId(String languageId) async {
-    return _lessons
+    final data = await _loadData();
+    return data.lessons
         .where((l) => l.languageId == languageId)
         .toList(growable: false);
   }
 
   @override
   Future<Lesson?> getById(String id) async {
+    final data = await _loadData();
     try {
-      return _lessons.firstWhere((l) => l.id == id);
+      return data.lessons.firstWhere((l) => l.id == id);
     } on StateError {
       return null;
     }
@@ -38,17 +47,23 @@ class InMemoryLessonRepository implements LessonRepository {
 
   @override
   Future<void> upsert(Lesson lesson) async {
-    final index = _lessons.indexWhere((l) => l.id == lesson.id);
+    final data = await _loadData();
+    final lessons = List<Lesson>.from(data.lessons);
+    final index = lessons.indexWhere((l) => l.id == lesson.id);
     if (index == -1) {
-      _lessons.add(lesson);
+      lessons.add(lesson);
     } else {
-      _lessons[index] = lesson;
+      lessons[index] = lesson;
     }
+    await _saveData(data.copyWith(lessons: lessons));
   }
 
   @override
   Future<void> delete(String id) async {
-    _lessons.removeWhere((l) => l.id == id);
+    final data = await _loadData();
+    final lessons = List<Lesson>.from(data.lessons)
+      ..removeWhere((l) => l.id == id);
+    await _saveData(data.copyWith(lessons: lessons));
   }
 }
 
