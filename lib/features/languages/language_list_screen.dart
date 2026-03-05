@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:verba/core/data/language_repository.dart';
 import 'package:verba/core/models/language.dart';
+import 'package:verba/features/lessons/lesson_list_screen.dart';
 
 class LanguageListScreen extends StatefulWidget {
   const LanguageListScreen({super.key});
@@ -121,6 +122,16 @@ class _LanguageListScreenState extends State<LanguageListScreen> {
                       leading: Text(language.emoji ?? '🌐'),
                       title: Text(language.name),
                       subtitle: Text(language.code),
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => LessonListScreen(
+                              languageId: language.id,
+                              languageName: language.name,
+                            ),
+                          ),
+                        );
+                      },
                     );
                   },
                 ),
