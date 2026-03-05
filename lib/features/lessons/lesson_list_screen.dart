@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:verba/core/data/lesson_repository.dart';
 import 'package:verba/core/models/lesson.dart';
+import 'package:verba/features/items/lesson_items_screen.dart';
 
 class LessonListScreen extends StatefulWidget {
   final String languageId;
@@ -149,7 +150,16 @@ class _LessonListScreenState extends State<LessonListScreen> {
                       subtitle: (lesson.description ?? '').trim().isEmpty
                           ? null
                           : Text(lesson.description!),
-                      onTap: () => _showUpsertLessonDialog(existing: lesson),
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => LessonItemsScreen(
+                              lessonId: lesson.id,
+                              lessonTitle: lesson.title,
+                            ),
+                          ),
+                        );
+                      },
                       trailing: IconButton(
                         tooltip: 'Delete',
                         onPressed: () => _confirmDelete(lesson),
