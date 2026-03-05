@@ -28,11 +28,13 @@ class _LessonItemsScreenState extends State<LessonItemsScreen> {
     _loadItems();
   }
 
-  Future<void> _showAddItemDialog() async {
-    final frontController = TextEditingController();
-    final backController = TextEditingController();
-    final notesController = TextEditingController();
-    LessonItemType type = LessonItemType.word;
+  Future<void> _showUpsertItemDialog({LessonItem? existing}) async {
+    final frontController =
+        TextEditingController(text: existing?.front ?? '');
+    final backController = TextEditingController(text: existing?.back ?? '');
+    final notesController =
+        TextEditingController(text: existing?.notes ?? '');
+    LessonItemType type = existing?.type ?? LessonItemType.word;
 
     final result = await showDialog<bool>(
       context: context,
@@ -40,7 +42,7 @@ class _LessonItemsScreenState extends State<LessonItemsScreen> {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             return AlertDialog(
-              title: const Text('Add item'),
+              title: Text(existing == null ? 'Add item' : 'Edit item'),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -118,7 +120,7 @@ class _LessonItemsScreenState extends State<LessonItemsScreen> {
     if (front.isEmpty || back.isEmpty) return;
 
     final item = LessonItem(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: existing?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
       lessonId: widget.lessonId,
       type: type,
       front: front,
@@ -130,9 +132,37 @@ class _LessonItemsScreenState extends State<LessonItemsScreen> {
     await _loadItems();
   }
 
+  Future<void> _confirmDeleteItem(LessonItem item) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Delete item?'),
+          content: Text('This will delete \"${item.front}\".'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result != true) return;
+
+    await _repository.delete(item.id);
+    await _loadItems();
+  }
+
   Future<void> _loadItems() async {
     final items = await _repository.getByLessonId(widget.lessonId);
     setState(() {
+      items.sort((a, b) => a.front.toLowerCase().compareTo(b.front.toLowerCase()));
       _items = items;
       _isLoading = false;
     });
@@ -147,8 +177,12 @@ class _LessonItemsScreenState extends State<LessonItemsScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _items.isEmpty
-              ? const Center(
-                  child: Text('No items yet. We will add some next.'),
+              ? Center(
+                  child: Text(
+                    'No items yet.\nTap + to add your first word or phrase.',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                 )
               : ListView.separated(
                   itemCount: _items.length,
@@ -157,16 +191,31 @@ class _LessonItemsScreenState extends State<LessonItemsScreen> {
                     final item = _items[index];
                     return ListTile(
                       title: Text(item.front),
-                      subtitle: Text(item.back),
-                      trailing: Text(
-                        item.type == LessonItemType.word ? 'word' : 'phrase',
-                        style: Theme.of(context).textTheme.labelSmall,
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(item.back),
+                          if ((item.notes ?? '').trim().isNotEmpty)
+                            Text(
+                              item.notes!,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(color: Colors.grey),
+                            ),
+                        ],
+                      ),
+                      onTap: () => _showUpsertItemDialog(existing: item),
+                      trailing: IconButton(
+                        tooltip: 'Delete',
+                        onPressed: () => _confirmDeleteItem(item),
+                        icon: const Icon(Icons.delete_outline),
                       ),
                     );
                   },
                 ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _showAddItemDialog,
+        onPressed: _showUpsertItemDialog,
         child: const Icon(Icons.add),
       ),
     );
