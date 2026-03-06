@@ -81,6 +81,14 @@ class _PracticeScreenState extends State<PracticeScreen> {
                         'Card ${_currentIndex + 1} of ${_items.length}',
                         style: theme.textTheme.labelMedium,
                       ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _showBack
+                            ? 'Tap the card to go back to the question.'
+                            : 'Tap the card or \"Show back\" to reveal the answer.',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodySmall,
+                      ),
                       const SizedBox(height: 16),
                       Expanded(
                         child: Center(
