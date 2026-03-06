@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:verba/core/data/lesson_repository.dart';
 import 'package:verba/core/models/lesson.dart';
 import 'package:verba/features/items/lesson_items_screen.dart';
+import 'package:verba/features/practice/practice_screen.dart';
 
 class LessonListScreen extends StatefulWidget {
   final String languageId;
@@ -160,10 +161,29 @@ class _LessonListScreenState extends State<LessonListScreen> {
                           ),
                         );
                       },
-                      trailing: IconButton(
-                        tooltip: 'Delete',
-                        onPressed: () => _confirmDelete(lesson),
-                        icon: const Icon(Icons.delete_outline),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            tooltip: 'Practice',
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => PracticeScreen(
+                                    lessonId: lesson.id,
+                                    lessonTitle: lesson.title,
+                                  ),
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.play_arrow),
+                          ),
+                          IconButton(
+                            tooltip: 'Delete',
+                            onPressed: () => _confirmDelete(lesson),
+                            icon: const Icon(Icons.delete_outline),
+                          ),
+                        ],
                       ),
                     );
                   },
