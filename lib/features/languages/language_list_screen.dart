@@ -22,24 +22,19 @@ class _LanguageListScreenState extends State<LanguageListScreen> {
     _loadLanguages();
   }
 
-  Future<void> _loadLanguages() async {
-    final languages = await _repository.getAll();
-    setState(() {
-      _languages = languages;
-      _isLoading = false;
-    });
-  }
-
-  Future<void> _showAddLanguageDialog() async {
-    final nameController = TextEditingController();
-    final codeController = TextEditingController();
-    final emojiController = TextEditingController();
+  Future<void> _showUpsertLanguageDialog({Language? existing}) async {
+    final nameController =
+        TextEditingController(text: existing?.name ?? '');
+    final codeController =
+        TextEditingController(text: existing?.code ?? '');
+    final emojiController =
+        TextEditingController(text: existing?.emoji ?? '');
 
     final result = await showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Add language'),
+          title: Text(existing == null ? 'Add language' : 'Edit language'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -91,7 +86,7 @@ class _LanguageListScreenState extends State<LanguageListScreen> {
     if (name.isEmpty || code.isEmpty) return;
 
     final language = Language(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: existing?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
       name: name,
       code: code,
       emoji: emoji,
@@ -99,6 +94,14 @@ class _LanguageListScreenState extends State<LanguageListScreen> {
 
     await _repository.upsert(language);
     await _loadLanguages();
+  }
+
+  Future<void> _loadLanguages() async {
+    final languages = await _repository.getAll();
+    setState(() {
+      _languages = languages;
+      _isLoading = false;
+    });
   }
 
   @override
@@ -110,33 +113,46 @@ class _LanguageListScreenState extends State<LanguageListScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _languages.isEmpty
-              ? const Center(
-                  child: Text('No languages yet. Add your first one!'),
+              ? Center(
+                  child: Text(
+                    'No languages yet.\nTap + to add your first language.',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                 )
-              : ListView.separated(
-                  itemCount: _languages.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
-                  itemBuilder: (context, index) {
-                    final language = _languages[index];
-                    return ListTile(
-                      leading: Text(language.emoji ?? '🌐'),
-                      title: Text(language.name),
-                      subtitle: Text(language.code),
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => LessonListScreen(
-                              languageId: language.id,
-                              languageName: language.name,
+              : Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: ListView.separated(
+                    itemCount: _languages.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final language = _languages[index];
+                      return ListTile(
+                        leading: Text(language.emoji ?? '🌐'),
+                        title: Text(language.name),
+                        subtitle: Text(language.code),
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => LessonListScreen(
+                                languageId: language.id,
+                                languageName: language.name,
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    );
-                  },
+                          );
+                        },
+                        trailing: IconButton(
+                          tooltip: 'Edit',
+                          onPressed: () =>
+                              _showUpsertLanguageDialog(existing: language),
+                          icon: const Icon(Icons.edit_outlined),
+                        ),
+                      );
+                    },
+                  ),
                 ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _showAddLanguageDialog,
+        onPressed: _showUpsertLanguageDialog,
         child: const Icon(Icons.add),
       ),
     );
