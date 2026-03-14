@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:verba/core/data/lesson_item_repository.dart';
 import 'package:verba/core/models/lesson_item.dart';
 
@@ -23,6 +24,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
   int _currentIndex = 0;
   bool _showBack = false;
   bool _isLoading = true;
+  int _correct = 0;
+  int _incorrect = 0;
 
   @override
   void initState() {
@@ -39,6 +42,11 @@ class _PracticeScreenState extends State<PracticeScreen> {
       _showBack = false;
       _isLoading = false;
     });
+    if (items.isNotEmpty) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('last_lesson_id', widget.lessonId);
+      await prefs.setString('last_lesson_title', widget.lessonTitle);
+    }
   }
 
   void _toggleSide() {
@@ -83,6 +91,11 @@ class _PracticeScreenState extends State<PracticeScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
+                        'Got it: $_correct · Again: $_incorrect',
+                        style: theme.textTheme.labelSmall,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
                         _showBack
                             ? 'Tap the card to go back to the question.'
                             : 'Tap the card or \"Show back\" to reveal the answer.',
@@ -106,11 +119,27 @@ class _PracticeScreenState extends State<PracticeScreen> {
                         children: [
                           OutlinedButton(
                             onPressed: _toggleSide,
-                            child: Text(_showBack ? 'Show front' : 'Show back'),
+                            child: Text(
+                              _showBack ? 'Show front' : 'Show back',
+                            ),
                           ),
                           FilledButton(
-                            onPressed: _nextCard,
-                            child: const Text('Next'),
+                            onPressed: () {
+                              setState(() {
+                                _incorrect++;
+                              });
+                              _nextCard();
+                            },
+                            child: const Text('Again'),
+                          ),
+                          FilledButton(
+                            onPressed: () {
+                              setState(() {
+                                _correct++;
+                              });
+                              _nextCard();
+                            },
+                            child: const Text('Got it'),
                           ),
                         ],
                       ),
