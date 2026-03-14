@@ -184,35 +184,38 @@ class _LessonItemsScreenState extends State<LessonItemsScreen> {
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 )
-              : ListView.separated(
-                  itemCount: _items.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
-                  itemBuilder: (context, index) {
-                    final item = _items[index];
-                    return ListTile(
-                      title: Text(item.front),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(item.back),
-                          if ((item.notes ?? '').trim().isNotEmpty)
-                            Text(
-                              item.notes!,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(color: Colors.grey),
-                            ),
-                        ],
-                      ),
-                      onTap: () => _showUpsertItemDialog(existing: item),
-                      trailing: IconButton(
-                        tooltip: 'Delete',
-                        onPressed: () => _confirmDeleteItem(item),
-                        icon: const Icon(Icons.delete_outline),
-                      ),
-                    );
-                  },
+              : Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: ListView.separated(
+                    itemCount: _items.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final item = _items[index];
+                      return ListTile(
+                        title: Text(item.front),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(item.back),
+                            if ((item.notes ?? '').trim().isNotEmpty)
+                              Text(
+                                item.notes!,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(color: Colors.grey),
+                              ),
+                          ],
+                        ),
+                        onTap: () => _showUpsertItemDialog(existing: item),
+                        trailing: IconButton(
+                          tooltip: 'Delete',
+                          onPressed: () => _confirmDeleteItem(item),
+                          icon: const Icon(Icons.delete_outline),
+                        ),
+                      );
+                    },
+                  ),
                 ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showUpsertItemDialog,

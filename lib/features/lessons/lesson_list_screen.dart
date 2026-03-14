@@ -138,55 +138,62 @@ class _LessonListScreenState extends State<LessonListScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _lessons.isEmpty
-              ? const Center(
-                  child: Text('No lessons yet. Add your first one!'),
+              ? Center(
+                  child: Text(
+                    'No lessons yet.\nTap + to add your first lesson.',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                 )
-              : ListView.separated(
-                  itemCount: _lessons.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
-                  itemBuilder: (context, index) {
-                    final lesson = _lessons[index];
-                    return ListTile(
-                      title: Text(lesson.title),
-                      subtitle: (lesson.description ?? '').trim().isEmpty
-                          ? null
-                          : Text(lesson.description!),
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => LessonItemsScreen(
-                              lessonId: lesson.id,
-                              lessonTitle: lesson.title,
+              : Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: ListView.separated(
+                    itemCount: _lessons.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final lesson = _lessons[index];
+                      return ListTile(
+                        title: Text(lesson.title),
+                        subtitle: (lesson.description ?? '').trim().isEmpty
+                            ? null
+                            : Text(lesson.description!),
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => LessonItemsScreen(
+                                lessonId: lesson.id,
+                                lessonTitle: lesson.title,
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            tooltip: 'Practice',
-                            onPressed: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (_) => PracticeScreen(
-                                    lessonId: lesson.id,
-                                    lessonTitle: lesson.title,
+                          );
+                        },
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              tooltip: 'Practice',
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) => PracticeScreen(
+                                      lessonId: lesson.id,
+                                      lessonTitle: lesson.title,
+                                    ),
                                   ),
-                                ),
-                              );
-                            },
-                            icon: const Icon(Icons.play_arrow),
-                          ),
-                          IconButton(
-                            tooltip: 'Delete',
-                            onPressed: () => _confirmDelete(lesson),
-                            icon: const Icon(Icons.delete_outline),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+                                );
+                              },
+                              icon: const Icon(Icons.play_arrow),
+                            ),
+                            IconButton(
+                              tooltip: 'Delete',
+                              onPressed: () => _confirmDelete(lesson),
+                              icon: const Icon(Icons.delete_outline),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
                 ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showUpsertLessonDialog,
