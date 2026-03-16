@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:verba/features/languages/language_list_screen.dart';
 import 'package:verba/features/practice/practice_screen.dart';
+import 'package:verba/features/profile/profile_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -38,6 +39,19 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Verba'),
+        actions: [
+          IconButton(
+            tooltip: 'Profile',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const ProfileScreen(),
+                ),
+              );
+            },
+            icon: const Icon(Icons.person_outline),
+          ),
+        ],
       ),
       body: Center(
         child: Padding(
@@ -47,31 +61,15 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Image.asset(
                 'assets/logo.png',
-                height: 96,
+                height: 72,
               ),
-              const SizedBox(height: 16),
-              Text(
-                'Verba',
-                style: theme.textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Text(
                 'Create and practice your own language lessons with a calm, focused experience.',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium,
               ),
               const SizedBox(height: 24),
-              FilledButton(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const LanguageListScreen(),
-                    ),
-                  );
-                },
-                child: const Text('Manage languages'),
-              ),
-              const SizedBox(height: 12),
               if (!_loadingLast && _lastLessonId != null)
                 FilledButton.tonal(
                   onPressed: () {

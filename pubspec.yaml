@@ -33,6 +33,7 @@ flutter_launcher_icons:
 flutter_native_splash:
   color: "#FFF3EB"
   image: assets/logo_trans.png
+  android_gravity: center
   android_12:
     icon_background_color: "#FFF3EB"
     image: assets/logo_trans.png
