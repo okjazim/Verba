@@ -141,8 +141,13 @@ class _PracticeScreenState extends State<PracticeScreen> {
                             ),
                             const SizedBox(height: 16),
                             FilledButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: const Text('Back to home'),
+                            ),
+                            const SizedBox(height: 8),
+                            TextButton(
                               onPressed: _loadItems,
-                              child: const Text('Restart'),
+                              child: const Text('Restart session'),
                             ),
                           ],
                         ),

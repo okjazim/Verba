@@ -91,11 +91,9 @@ class _HomeScreenState extends State<HomeScreen> {
               else
                 OutlinedButton(
                   onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Start by creating a language, a lesson, and some items first.',
-                        ),
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const LanguageListScreen(),
                       ),
                     );
                   },
