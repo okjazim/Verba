@@ -21,11 +21,12 @@ class PracticeScreen extends StatefulWidget {
 class _PracticeScreenState extends State<PracticeScreen> {
   final LessonItemRepository _repository = InMemoryLessonItemRepository();
   List<LessonItem> _items = const [];
-  int _currentIndex = 0;
   bool _showBack = false;
   bool _isLoading = true;
   int _correct = 0;
   int _incorrect = 0;
+  int _currentIndex = 0;
+  late List<int> _queue;
 
   @override
   void initState() {
@@ -38,9 +39,12 @@ class _PracticeScreenState extends State<PracticeScreen> {
     if (!mounted) return;
     setState(() {
       _items = items;
+      _queue = List<int>.generate(items.length, (i) => i)..shuffle();
       _currentIndex = 0;
       _showBack = false;
       _isLoading = false;
+      _correct = 0;
+      _incorrect = 0;
     });
     if (items.isNotEmpty) {
       final prefs = await SharedPreferences.getInstance();
@@ -55,10 +59,44 @@ class _PracticeScreenState extends State<PracticeScreen> {
     });
   }
 
-  void _nextCard() {
-    if (_items.isEmpty) return;
+  LessonItem? get _currentItem {
+    if (_queue.isEmpty || _items.isEmpty) return null;
+    final idx = _queue[_currentIndex.clamp(0, _queue.length - 1)];
+    return _items[idx];
+  }
+
+  void _advance() {
+    if (_queue.isEmpty) return;
     setState(() {
-      _currentIndex = (_currentIndex + 1) % _items.length;
+      _showBack = false;
+      if (_currentIndex >= _queue.length - 1) {
+        _currentIndex = 0;
+      } else {
+        _currentIndex++;
+      }
+    });
+  }
+
+  void _markAgain() {
+    final item = _currentItem;
+    if (item == null || !_showBack) return;
+    setState(() {
+      _incorrect++;
+      final currentId = _queue.removeAt(_currentIndex);
+      final insertAt = (_currentIndex + 3).clamp(0, _queue.length);
+      _queue.insert(insertAt, currentId);
+      if (_currentIndex >= _queue.length) _currentIndex = 0;
+      _showBack = false;
+    });
+  }
+
+  void _markGotIt() {
+    final item = _currentItem;
+    if (item == null || !_showBack) return;
+    setState(() {
+      _correct++;
+      _queue.removeAt(_currentIndex);
+      if (_currentIndex >= _queue.length) _currentIndex = 0;
       _showBack = false;
     });
   }
@@ -66,6 +104,10 @@ class _PracticeScreenState extends State<PracticeScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    final item = _currentItem;
+    final total = _items.length;
+    final remaining = _queue.length;
 
     return Scaffold(
       appBar: AppBar(
@@ -81,12 +123,37 @@ class _PracticeScreenState extends State<PracticeScreen> {
                     style: theme.textTheme.bodyMedium,
                   ),
                 )
+              : _queue.isEmpty
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Session complete',
+                              style: theme.textTheme.headlineSmall,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Got it: $_correct · Again: $_incorrect',
+                              style: theme.textTheme.bodyMedium,
+                            ),
+                            const SizedBox(height: 16),
+                            FilledButton(
+                              onPressed: _loadItems,
+                              child: const Text('Restart'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
               : Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
                       Text(
-                        'Card ${_currentIndex + 1} of ${_items.length}',
+                        'Remaining $remaining of $total',
                         style: theme.textTheme.labelMedium,
                       ),
                       const SizedBox(height: 8),
@@ -106,8 +173,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
                       Expanded(
                         child: Center(
                           child: _Flashcard(
-                            front: _items[_currentIndex].front,
-                            back: _items[_currentIndex].back,
+                            front: item?.front ?? '',
+                            back: item?.back ?? '',
                             showBack: _showBack,
                             onTap: _toggleSide,
                           ),
@@ -124,21 +191,11 @@ class _PracticeScreenState extends State<PracticeScreen> {
                             ),
                           ),
                           FilledButton(
-                            onPressed: () {
-                              setState(() {
-                                _incorrect++;
-                              });
-                              _nextCard();
-                            },
+                            onPressed: _showBack ? _markAgain : null,
                             child: const Text('Again'),
                           ),
                           FilledButton(
-                            onPressed: () {
-                              setState(() {
-                                _correct++;
-                              });
-                              _nextCard();
-                            },
+                            onPressed: _showBack ? _markGotIt : null,
                             child: const Text('Got it'),
                           ),
                         ],

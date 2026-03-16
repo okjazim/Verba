@@ -131,6 +131,9 @@ class _LessonListScreenState extends State<LessonListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final a1 = _lessons.where((l) => l.title.startsWith('A1 ')).toList();
+    final a2 = _lessons.where((l) => l.title.startsWith('A2 ')).toList();
+
     return Scaffold(
       appBar: AppBar(
         title: Text('${widget.languageName} lessons'),
@@ -145,19 +148,18 @@ class _LessonListScreenState extends State<LessonListScreen> {
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 )
-              : Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: ListView.separated(
-                    itemCount: _lessons.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final lesson = _lessons[index];
-                      return ListTile(
-                        title: Text(lesson.title),
-                        subtitle: (lesson.description ?? '').trim().isEmpty
-                            ? null
-                            : Text(lesson.description!),
-                        onTap: () {
+              : CustomScrollView(
+                  slivers: [
+                    if (a1.isNotEmpty) ...[
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                          child: Text('A1', style: Theme.of(context).textTheme.titleLarge),
+                        ),
+                      ),
+                      _UnitGrid(
+                        lessons: a1,
+                        onOpen: (lesson) {
                           Navigator.of(context).push(
                             MaterialPageRoute<void>(
                               builder: (_) => LessonItemsScreen(
@@ -167,39 +169,131 @@ class _LessonListScreenState extends State<LessonListScreen> {
                             ),
                           );
                         },
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              tooltip: 'Practice',
-                              onPressed: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute<void>(
-                                    builder: (_) => PracticeScreen(
-                                      lessonId: lesson.id,
-                                      lessonTitle: lesson.title,
-                                    ),
-                                  ),
-                                );
-                              },
-                              icon: const Icon(Icons.play_arrow),
+                        onPractice: (lesson) {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => PracticeScreen(
+                                lessonId: lesson.id,
+                                lessonTitle: lesson.title,
+                              ),
                             ),
-                            IconButton(
-                              tooltip: 'Delete',
-                              onPressed: () => _confirmDelete(lesson),
-                              icon: const Icon(Icons.delete_outline),
-                            ),
-                          ],
+                          );
+                        },
+                      ),
+                    ],
+                    if (a2.isNotEmpty) ...[
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                          child: Text('A2', style: Theme.of(context).textTheme.titleLarge),
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                      _UnitGrid(
+                        lessons: a2,
+                        onOpen: (lesson) {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => LessonItemsScreen(
+                                lessonId: lesson.id,
+                                lessonTitle: lesson.title,
+                              ),
+                            ),
+                          );
+                        },
+                        onPractice: (lesson) {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => PracticeScreen(
+                                lessonId: lesson.id,
+                                lessonTitle: lesson.title,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                    const SliverToBoxAdapter(child: SizedBox(height: 88)),
+                  ],
                 ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showUpsertLessonDialog,
         child: const Icon(Icons.add),
       ),
     );
+  }
+}
+
+class _UnitGrid extends StatelessWidget {
+  final List<Lesson> lessons;
+  final void Function(Lesson lesson) onOpen;
+  final void Function(Lesson lesson) onPractice;
+
+  const _UnitGrid({
+    required this.lessons,
+    required this.onOpen,
+    required this.onPractice,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      sliver: SliverGrid(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final lesson = lessons[index];
+            final unitNumber = _parseUnitNumber(lesson.title) ?? (index + 1);
+            return InkWell(
+              onTap: () => onOpen(lesson),
+              borderRadius: BorderRadius.circular(18),
+              child: Container(
+                margin: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Stack(
+                  children: [
+                    Center(
+                      child: Text(
+                        '$unitNumber',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ),
+                    Positioned(
+                      right: 4,
+                      bottom: 4,
+                      child: IconButton(
+                        tooltip: 'Practice',
+                        onPressed: () => onPractice(lesson),
+                        icon: const Icon(Icons.play_arrow),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+          childCount: lessons.length,
+        ),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 4,
+          childAspectRatio: 1,
+        ),
+      ),
+    );
+  }
+
+  int? _parseUnitNumber(String title) {
+    final match = RegExp(r'Unit\s+(\d+)$').firstMatch(title);
+    return match == null ? null : int.tryParse(match.group(1)!);
   }
 }
 
