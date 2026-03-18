@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:verba/features/languages/language_list_screen.dart';
+import 'package:verba/features/home/home_screen.dart';
 
 class IntroScreen extends StatelessWidget {
   const IntroScreen({super.key});
@@ -12,7 +12,7 @@ class IntroScreen extends StatelessWidget {
     if (!context.mounted) return;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute<void>(
-        builder: (_) => const LanguageListScreen(),
+        builder: (_) => const HomeScreen(),
       ),
     );
   }
