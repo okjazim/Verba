@@ -1,37 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:verba/core/database/app_database.dart';
+import 'package:verba/core/di/service_locator.dart';
+import 'package:verba/data/seed/seed_data.dart';
+import 'package:verba/presentation/app.dart';
 
-import 'package:shared_preferences/shared_preferences.dart';
-import 'core/theme/app_theme.dart';
-import 'features/home/home_screen.dart';
-import 'features/home/intro_screen.dart';
-
-void main() {
-  runApp(const VerbaApp());
-}
-
-class VerbaApp extends StatelessWidget {
-  const VerbaApp({super.key});
-
-  Future<Widget> _decideStartScreen() async {
-    final prefs = await SharedPreferences.getInstance();
-    final seenIntro = prefs.getBool('verba_seen_intro_v1') ?? false;
-    return seenIntro ? const HomeScreen() : const IntroScreen();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Verba',
-      theme: AppTheme.light,
-      home: FutureBuilder<Widget>(
-        future: _decideStartScreen(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const SizedBox.shrink();
-          }
-          return snapshot.data ?? const IntroScreen();
-        },
-      ),
-    );
-  }
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await setupDependencies();
+  await SeedData.ensure(sl<AppDatabase>());
+  runApp(const ProviderScope(child: VerbaApp()));
 }
