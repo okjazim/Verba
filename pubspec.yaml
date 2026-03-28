@@ -1,7 +1,7 @@
 name: verba
-description: "A new Flutter project."
+description: "Community-driven, open-source language learning application."
 publish_to: 'none'
-version: 0.1.0
+version: 0.1.0+1
 
 environment:
   sdk: ^3.10.4
@@ -9,6 +9,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  sqflite: ^2.4.1
+  path: ^1.9.0
+  path_provider: ^2.1.5
+  get_it: ^8.0.2
+  flutter_riverpod: ^2.6.1
+  flutter_tts: ^4.2.2
   shared_preferences: ^2.5.4
 
 dev_dependencies:
@@ -17,6 +23,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.1
   flutter_native_splash: ^2.4.2
+  mocktail: ^1.0.4
 
 flutter:
   uses-material-design: true
